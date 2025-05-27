@@ -1,6 +1,6 @@
 # Microformer
 
-**Microformer** is a minimal, educational-scale transformer language model built from scratch in PyTorch. Inspired by projects like [minGPT](https://github.com/karpathy/minGPT) and OpenAI's original GPT-1, this project is ideal for understanding transformer internals, experimenting with new ideas, and training on lightweight datasets like [text8](https://mattmahoney.net/dc/textdata.html) or Tiny Shakespeare.
+**Microformer** is a minimal, educational-scale transformer language model built from scratch in PyTorch. Inspired by projects like [nanoGPT](https://github.com/karpathy/nanoGPT) and OpenAI's original GPT-1, this project is ideal for understanding transformer internals, experimenting with new ideas, and training on lightweight datasets like [text8](https://mattmahoney.net/dc/textdata.html) or Tiny Shakespeare.
 
 ---
 
@@ -106,7 +106,7 @@ pip install torch
 
 ##  Credits
 
-- Inspired by [minGPT](https://github.com/karpathy/minGPT) by Andrej Karpathy
+- Inspired by [minGPT](https://github.com/karpathy/minGPT) and [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy
 - Based on concepts from the original [GPT-1 paper](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf)
 
 ---
