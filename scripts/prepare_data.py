@@ -1,35 +1,25 @@
 import torch
 import json
+from tokenizers import Tokenizer
 from pathlib import Path
 
-# Load the dummy corpus
-DATA_PATH = Path("data/corpus.txt")
-with open(DATA_PATH, "r", encoding="utf-8") as f:
+# Load tokenizer
+tokenizer = Tokenizer.from_file("data/tokenizer.json")
+VOCAB_SIZE = tokenizer.get_vocab_size()
+
+# Load corpus
+with open("data/corpus.txt", "r", encoding="utf-8") as f:
     text = f.read()
 
-# Create character-level vocabulary
-chars = sorted(list(set(text)))
-stoi = {ch: i for i, ch in enumerate(chars)}
-itos = {i: ch for ch, i in stoi.items()}
+# Encode with BPE tokenizer
+encoded = tokenizer.encode(text).ids
 
-# Save vocab
-VOCAB_PATH = Path("data/vocab.json")
-with open(VOCAB_PATH, "w") as f:
-    json.dump({"stoi": stoi, "itos": itos}, f)
-
-# Encode text into tensor of token IDs
-def encode(s):
-    return [stoi[c] for c in s]
-
-data = torch.tensor(encode(text), dtype=torch.long)
-
-# Optionally split into train/val (simple 90/10 split)
+# Convert to tensor and split into train/val
+data = torch.tensor(encoded, dtype=torch.long)
 split = int(0.9 * len(data))
 train_data = data[:split]
 val_data = data[split:]
 
-# Save to disk
-torch.save(train_data, "data/train.pt")
-torch.save(val_data, "data/val.pt")
-
-print(f"Data preparation complete! {len(train_data)} train tokens, {len(val_data)} val tokens.")
+# Save outputs
+Path("data/train.pt").write_bytes(train_data.numpy().tobytes())
+Path("data/val.pt").write_bytes(val_data.numpy().tobytes())
