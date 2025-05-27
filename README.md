@@ -42,7 +42,8 @@ microformer/
 1. **Prepare the dataset**:
 
    ```bash
-   python scripts/prepare_data.py```
+   python scripts/prepare_data.py
+   ```
 
 This reads `data/corpus.txt`, builds a vocabulary, encodes it to token IDs, and saves `train.pt`/`val.pt`.
 
