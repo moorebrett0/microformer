@@ -21,7 +21,7 @@ inputs = data[:-1].unsqueeze(0)   # (1, seq_len - 1)
 targets = data[1:].unsqueeze(0)   # (1, seq_len - 1)
 
 SEQ_LEN = MAX_SEQ_LEN
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 
 # Drop remainder to keep shape clean
 num_batches = len(data) // (SEQ_LEN * BATCH_SIZE)
@@ -43,7 +43,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 # Training loop
-for epoch in range(3):
+for epoch in range(50):
     for i in range(0, data.shape[1] - SEQ_LEN, SEQ_LEN):
         inputs, targets = get_batch(i)
         optimizer.zero_grad()
