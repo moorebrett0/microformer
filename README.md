@@ -16,7 +16,7 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 microformer/
