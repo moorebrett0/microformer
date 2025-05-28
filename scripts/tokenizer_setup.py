@@ -15,7 +15,7 @@ tokenizer = Tokenizer(models.BPE())
 tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
 
 # Train tokenizer
-trainer = trainers.BpeTrainer(vocab_size=1000, special_tokens=["<PAD>", "<UNK>"])
+trainer = trainers.BpeTrainer(vocab_size=3000, special_tokens=["<PAD>", "<UNK>", "<EOS>"])
 tokenizer.train_from_iterator(lines, trainer)
 
 # Save tokenizer

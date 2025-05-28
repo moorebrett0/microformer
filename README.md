@@ -1,18 +1,20 @@
 # Microformer
 
-**Microformer** is a minimal, educational-scale transformer language model built from scratch in PyTorch. Inspired by projects like [nanoGPT](https://github.com/karpathy/nanoGPT) and OpenAI's original GPT-1, this project is ideal for understanding transformer internals, experimenting with new ideas, and training on lightweight datasets like [text8](https://mattmahoney.net/dc/textdata.html) or Tiny Shakespeare.
+**Microformer** is a minimal, educational-scale transformer language model built from scratch in PyTorch.  
+Inspired by [nanoGPT](https://github.com/karpathy/nanoGPT) and OpenAI’s GPT-1, Microformer is designed for learning, experimentation, and prototyping on lightweight datasets like [text8](https://mattmahoney.net/dc/textdata.html) or Tiny Shakespeare.
 
 ---
 
 ## Features
 
-- Decoder-only transformer architecture  
-- Character-level or subword tokenization (char-level default)  
-- Positional encoding  
-- Multi-head self-attention  
-- Configurable depth, width, and sequence length  
-- Simple training loop with PyTorch  
-- Inference/generation script with temperature sampling  
+- Decoder-only transformer (GPT-style) architecture
+- Choice of character-level **or** subword/BPE tokenization (configurable)
+- Learnable positional encoding
+- Multi-head self-attention
+- Configurable depth, embedding size, sequence length, and attention heads
+- Simple end-to-end pipeline: preprocessing, training, and text generation
+- Modular, readable code ideal for educational use and tinkering
+- Temperature and multinomial sampling in text generation
 
 ---
 
@@ -20,54 +22,57 @@
 
 ```
 microformer/
-├── config.py            # Model hyperparameters
+├── config.py              # Hyperparameters and model settings
 ├── data/
-│   ├── corpus.txt       # Your training text
-│   ├── train.pt         # Preprocessed training tensor
-│   ├── val.pt           # Validation tensor (optional)
-│   └── vocab.json       # Character vocabulary mapping
+│   ├── corpus.txt         # Raw training text
+│   ├── train.pt           # Preprocessed training tensor (token IDs)
+│   ├── val.pt             # Validation tensor (token IDs)
+│   ├── vocab.json         # Vocabulary (char or subword, stoi/itos mapping)
+│   └── tokenizer.json     # (optional) BPE tokenizer file if using subwords
 ├── models/
-│   └── model.py         # Transformer model definition
+│   └── model.py           # Transformer model definition (Microformer)
 ├── scripts/
-│   ├── prepare_data.py  # Data preprocessing script
-│   ├── train.py         # Training loop
-│   └── generate_text.py # Inference/generation script
+│   ├── prepare_data.py    # Data preprocessing/tokenization
+│   ├── train.py           # Training script
+│   └── generate_text.py   # Inference/generation script
 └── README.md
 ```
 
 ---
 
-##  Training
+## Quickstart
 
-1. **Prepare the dataset**:
+1. **Prepare the dataset**
 
    ```bash
    python scripts/prepare_data.py
    ```
+   - Reads `data/corpus.txt`
+   - Trains a vocabulary/tokenizer (char-level or BPE)
+   - Encodes text as token IDs and saves `train.pt` / `val.pt`
+   - Saves vocabulary as `vocab.json` (and `tokenizer.json` for BPE)
 
-This reads `data/corpus.txt`, builds a vocabulary, encodes it to token IDs, and saves `train.pt`/`val.pt`.
-
----
-
-2. **Train the model**:
+2. **Train the model**
 
    ```bash
    python scripts/train.py
    ```
+   - Loads tokenized data and vocabulary
+   - Configures model via `config.py`
+   - Trains a transformer on next-token prediction
 
-   You can configure model size, batch size, sequence length, and epochs via `config.py`.
-
-3. **Generate text**:
+3. **Generate text**
 
    ```bash
    python scripts/generate_text.py
    ```
-
-   This loads a saved model and prompts for a seed string + temperature.
+   - Loads a trained checkpoint
+   - Prompts for a seed string and temperature
+   - Generates new text in the style of your corpus
 
 ---
 
-##  Example Config (`config.py`)
+## Example Config (`config.py`)
 
 ```python
 EMBED_DIM = 128
@@ -75,44 +80,46 @@ NUM_HEADS = 4
 NUM_LAYERS = 2
 FF_DIM = 256
 MAX_SEQ_LEN = 128
-VOCAB_SIZE = 100  # Overridden at runtime
+BATCH_SIZE = 32
+VOCAB_SIZE = 100  # Set automatically from tokenizer/vocab
 ```
 
 ---
 
-##  Ideas to Extend
+## Customization & Ideas
 
-- Switch to BPE or WordPiece tokenization
-- Add validation loss and early stopping
-- Train on `text8`, `tinyshakespeare`, or `OpenWebText`
-- Replace softmax with sparse attention
-- Explore memory-augmented architectures
-- Log loss/attention via TensorBoard or wandb
+- Use BPE/subword tokenization for more expressive modeling (recommended for non-trivial datasets)
+- Swap in larger datasets: `text8`, `tinyshakespeare`, etc.
+- Add validation loss, checkpointing, or early stopping
+- Visualize training with TensorBoard or wandb
+- Experiment with alternative attention mechanisms or memory modules
 
 ---
 
-## ️ Requirements
+## Requirements
 
 - Python 3.8+
-- PyTorch
+- [PyTorch](https://pytorch.org/)
+- [tokenizers](https://github.com/huggingface/tokenizers) (for BPE/subword)
 
-Install with:
-
+Install dependencies with:
 ```bash
-pip install torch
+pip install torch tokenizers
 ```
 
 ---
 
-##  Credits
+## Credits
 
-- Inspired by [minGPT](https://github.com/karpathy/minGPT) and [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy
-- Based on concepts from the original [GPT-1 paper](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf)
+- Inspired by [nanoGPT](https://github.com/karpathy/nanoGPT) and [minGPT](https://github.com/karpathy/minGPT) by Andrej Karpathy
+- Built using concepts from the original [GPT-1 paper](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf)
 
 ---
 
-##  License
+## License
 
-MIT License. Use freely for learning and experimentation.
+MIT License – Use freely for learning and experimentation.
 
+---
 
+**Happy tinkering with transformers!**
