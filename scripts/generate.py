@@ -2,79 +2,94 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+# scripts/generate.py
 import torch
-import json
 import torch.nn.functional as F
 from models.model import Microformer
-from config import *
-from scripts.memory import save_memory, recall_memories
 from tokenizers import Tokenizer
+from config import VOCAB_SIZE, EMBED_DIM, NUM_HEADS, FF_DIM, NUM_LAYERS, MAX_SEQ_LEN
+import sqlite3
+from datetime import datetime
 
-# Load tokenizer
+# Load tokenizer and model
 tokenizer = Tokenizer.from_file("data/tokenizer.json")
 VOCAB_SIZE = tokenizer.get_vocab_size()
 
-# Load model
-model = Microformer(VOCAB_SIZE, EMBED_DIM, NUM_HEADS, FF_DIM, NUM_LAYERS, MAX_SEQ_LEN)
+model = Microformer(
+    vocab_size=VOCAB_SIZE,
+    embed_dim=EMBED_DIM,
+    num_heads=NUM_HEADS,
+    ff_dim=FF_DIM,
+    num_layers=NUM_LAYERS,
+    max_seq_len=MAX_SEQ_LEN
+)
 model.load_state_dict(torch.load("microformer.pt"))
 model.eval()
 
-# Encode and decode using tokenizer
-def encode(s):
-    return tokenizer.encode(s).ids
+# Setup memory DB
+conn = sqlite3.connect("memory.db")
+c = conn.cursor()
+c.execute("""
+CREATE TABLE IF NOT EXISTS memory (
+    timestamp TEXT,
+    prompt TEXT,
+    response TEXT
+)
+""")
+conn.commit()
 
-def decode(l):
-    return tokenizer.decode(l)
+def top_p_sample(logits, p=0.9):
+    probs = torch.softmax(logits, dim=-1).squeeze()
+    sorted_probs, sorted_indices = torch.sort(probs, descending=True)
+    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
 
-# Top-k filtering
-def top_k_logits(logits, k):
-    v, ix = torch.topk(logits, k)
-    out = logits.clone()
-    out[out < v[..., -1, None]] = -float("Inf")
-    return out
+    cutoff = cumulative_probs > p
+    cutoff[1:] = cutoff[:-1].clone()
+    cutoff[0] = False
+    sorted_probs[cutoff] = 0
+    sorted_probs /= sorted_probs.sum()
 
-# Generate function with top-k and repeat filtering
-def generate(prompt, length=100, temperature=1.0, top_k=10):
-    input_ids = torch.tensor(encode(prompt), dtype=torch.long).unsqueeze(0)
-    generated = input_ids.tolist()[0]
+    sampled_idx = torch.multinomial(sorted_probs, 1).item()
+    return sorted_indices[sampled_idx]
+
+def generate(prompt, length=100, temperature=1.0, top_p=0.9):
+    input_ids = tokenizer.encode(prompt).ids
+    input_tensor = torch.tensor([input_ids], dtype=torch.long)
+
+    eos_token_id = tokenizer.token_to_id("<EOS>")
 
     for _ in range(length):
-        x = input_ids[:, -MAX_SEQ_LEN:]
         with torch.no_grad():
-            logits = model(x)
-        next_token_logits = logits[0, -1, :]
+            logits = model(input_tensor)
+            logits = logits[:, -1, :] / temperature
 
-        # Apply top-k filtering and temperature
-        filtered_logits = top_k_logits(next_token_logits, k=top_k)
-        probs = F.softmax(filtered_logits / temperature, dim=0)
+            next_token_id = top_p_sample(logits, p=top_p)
 
-        # Sample next token
-        next_token = torch.multinomial(probs, num_samples=1).item()
+        input_tensor = torch.cat([input_tensor, torch.tensor([[next_token_id]])], dim=1)
 
-        # Avoid repeating the same token 3 times in a row
-        if len(generated) > 2 and next_token == generated[-1] == generated[-2]:
-            continue
+        if next_token_id == eos_token_id:
+            break
 
-        generated.append(next_token)
-        input_ids = torch.tensor([generated], dtype=torch.long)
+    output_ids = input_tensor[0].tolist()
+    decoded = tokenizer.decode(output_ids)
 
-    return decode(generated)
+    if "<EOS>" in decoded:
+        decoded = decoded.split("<EOS>")[0].strip()
+
+    return decoded
 
 if __name__ == "__main__":
     prompt = input("Enter a prompt: ")
-    temp = input("Temperature (e.g. 0.7, 1.0): ")
-    try:
-        temperature = float(temp)
-    except:
-        temperature = 1.0
+    temp = float(input("Temperature (e.g. 0.7, 1.0): "))
 
-    output = generate(prompt, length=200, temperature=temperature)
-
+    response = generate(prompt, length=100, temperature=temp, top_p=0.9)
     print("\nGenerated text:\n")
-    print(output)
+    print(response)
 
-    save_memory(prompt, output)
+    c.execute("INSERT INTO memory (timestamp, prompt, response) VALUES (?, ?, ?)",
+              (datetime.now().isoformat(timespec='seconds'), prompt, response))
+    conn.commit()
 
     print("\nRecent memory:")
-    for p, r, t in recall_memories():
-        print(f"[{t}] {p} → {r}")
+    for row in c.execute("SELECT * FROM memory ORDER BY timestamp DESC LIMIT 5"):
+        print(f"[{row[0]}] {row[1]} → {row[2]}")

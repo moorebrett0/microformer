@@ -1,5 +1,6 @@
 import torch
 import json
+import numpy
 from tokenizers import Tokenizer
 from pathlib import Path
 
@@ -21,5 +22,5 @@ train_data = data[:split]
 val_data = data[split:]
 
 # Save outputs
-Path("data/train.pt").write_bytes(train_data.numpy().tobytes())
-Path("data/val.pt").write_bytes(val_data.numpy().tobytes())
+torch.save(train_data, "data/train.pt")
+torch.save(val_data, "data/val.pt")
