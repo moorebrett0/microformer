@@ -6,3 +6,4 @@ NUM_LAYERS = 4         # Number of transformer blocks
 FF_DIM = 512           # Feedforward layer dimension
 MAX_SEQ_LEN = 256      # Maximum sequence length
 VOCAB_SIZE = 100       # Placeholder (will be overridden based on dataset)
+ADAPTER_DIM = 32        # Add in adapter for continual learning
