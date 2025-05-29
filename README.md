@@ -56,9 +56,8 @@ microformer/
   Set up BPE vocab with:
   ```bash
   python scripts/tokenizer_setup.py --input data/corpus.txt --vocab_size 1000
-  
+  ```
   Adjust --vocab_size as desired.
-
 
 3. **Prepare the dataset**
 
