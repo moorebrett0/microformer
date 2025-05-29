@@ -12,10 +12,13 @@ with corpus_path.open("r", encoding="utf-8") as f:
 
 # Initialize tokenizer with BPE model
 tokenizer = Tokenizer(models.BPE())
-tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
+tokenizer.pre_tokenizer = pre_tokenizers.Sequence([
+                              pre_tokenizers.Whitespace(),
+                              pre_tokenizers.Punctuation()
+                          ])
 
 # Train tokenizer
-trainer = trainers.BpeTrainer(vocab_size=3000, special_tokens=["<PAD>", "<UNK>", "<EOS>"])
+trainer = trainers.BpeTrainer(vocab_size=5000, special_tokens=["<PAD>", "<UNK>", "<EOS>"])
 tokenizer.train_from_iterator(lines, trainer)
 
 # Save tokenizer
