@@ -35,6 +35,7 @@ microformer/
 │   ├── prepare_data.py    # Data preprocessing/tokenization
 │   ├── train.py           # Training script
 │   └── generate_text.py   # Inference/generation script
+│   └── tokenizer_setup.py # BPE Tokenizer
 └── README.md
 ```
 
@@ -42,7 +43,24 @@ microformer/
 
 ## Quickstart
 
-1. **Prepare the dataset**
+1. **Load your corpus and run tokenizer**
+
+   First, make sure you have a training corpus ready at `data/corpus.txt`. This should be a plain text file containing the data you want to train your microformer on (for example: sentences, phrases, or any text lines—one per line).
+
+2. **Choose your tokenizer:**
+
+- **Character-level (default):**  
+  No extra steps needed—just run the main data prep script.
+
+- **BPE/Subword (optional, recommended for larger or more complex text):**  
+  Set up BPE vocab with:
+  ```bash
+  python scripts/tokenizer_setup.py --input data/corpus.txt --vocab_size 1000
+  
+  Adjust --vocab_size as desired.
+
+
+3. **Prepare the dataset**
 
    ```bash
    python scripts/prepare_data.py
@@ -52,7 +70,7 @@ microformer/
    - Encodes text as token IDs and saves `train.pt` / `val.pt`
    - Saves vocabulary as `vocab.json` (and `tokenizer.json` for BPE)
 
-2. **Train the model**
+4. **Train the model**
 
    ```bash
    python scripts/train.py
@@ -61,7 +79,7 @@ microformer/
    - Configures model via `config.py`
    - Trains a transformer on next-token prediction
 
-3. **Generate text**
+5. **Generate text**
 
    ```bash
    python scripts/generate_text.py
